@@ -4,102 +4,245 @@
 
 package frc.robot;
 
-// WPI TimedRobot
+import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.TimedRobot;
-
-// WPI Command Libraries
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.Commands.DrivetrainCommands;
+import frc.robot.Subsystems.Drivetrain;
+import frc.robot.Utility.FileHelpers;
+import frc.robot.Utility.SwerveUtils;
+import edu.wpi.first.math.util.Units;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 
-/**
- * The VM is configured to automatically run this class, and to call the functions corresponding to
- * each mode, as described in the TimedRobot documentation. If you change the name of this class or
- * the package after creating this project, you must also update the build.gradle file in the
- * project.
- */
 public class Robot extends TimedRobot {
-  private Command m_autonomousCommand;
+  // Subsystems and major objects
+  private final Drivetrain drivetrain;
+  private final XboxController driverController;
+  private final XboxController manipController;
+  private final Compressor compressor;
+  private final LED led;
+  private Command autonomousCommand;
 
-  private RobotContainer m_robotContainer;
+  @SuppressWarnings("unused")
+  private final Dashboard dashboard = new Dashboard();
+
+  public static enum MasterStates {
+    STOWED
+  }
+
+  public static MasterStates masterState = MasterStates.STOWED;
+
+  // Major constants
+  private final String codeVersion = "2025-Robot v1.1_dev";
+  public static double robotLength_m;
+  public static double robotWidth_m;
+  public static double robotLengthBumpers;
+  public static double robotWidthBumpers;
+  public static final String robotProfile = FileHelpers.readFile("/home/lvuser/calibrations/RobotProfile.txt");
+  private final String[] actuatorNames = { "No_Test", "Compressor_(p)", "Drive_0_(p)", "Drive_1_(p)", "Drive_2_(p)",
+      "Drive_3_(p)",
+      "Azimuth_0_(p)", "Azimuth_1_(p)", "Azimuth_2_(p)", "Azimuth_3_(p)", "Swerve_0_Shifter_(b)",
+      "Swerve_1_Shifter_(b)", "Swerve_2_Shifter_(b)", "Swerve_3_Shifter_(b)", "Drivetrain_(p)" };
+  public static final String[] legalDrivers = { "Devin", "Reed", "Driver 3", "Driver 4", "Driver 5", "Programmers",
+      "Kidz" };
+
+  // Looptime tracking
+  public static double loopTime_ms = 20;
+  private static double loopTime0 = System.currentTimeMillis();
+
+  // Dashboard variables
+  private double selectedDriver0 = 0;
 
   /**
-   * This function is run when the robot is first started up and should be used for any
-   * initialization code.
+   * This is called when the robot is initalized
    */
+  public Robot() {
+    // Set major constants using profiles
+    switch (Robot.robotProfile) {
+      case "2025_Robot":
+        robotLength_m = Units.inchesToMeters(23);
+        robotWidth_m = Units.inchesToMeters(23);
+        robotLengthBumpers = Units.inchesToMeters(35);
+        robotWidthBumpers = Units.inchesToMeters(35);
+        break;
+      case "COTS_Testbed":
+        robotLength_m = Units.inchesToMeters(23);
+        robotWidth_m = Units.inchesToMeters(23);
+        break;
+      default:
+        robotLength_m = Units.inchesToMeters(23);
+        robotWidth_m = Units.inchesToMeters(23);
+    }
+    
+     // Set up subsystems and major objects
+     drivetrain = new Drivetrain();
+     led = new LED();
+     driverController = new XboxController(0);
+     manipController = new XboxController(1);
+     compressor = new Compressor(2, PneumaticsModuleType.REVPH);
+
+    // Send major constants to the Dashboard
+    Dashboard.robotProfile.set(robotProfile);
+    Dashboard.codeVersion.set(codeVersion);
+    Dashboard.currentDriverProfileSetpoints
+        .set(SwerveUtils.readDriverProfiles(legalDrivers[(int) Dashboard.selectedDriver.get()]).toDoubleArray());
+    Dashboard.legalActuatorNames.set(actuatorNames);
+    Dashboard.legalDrivers.set(legalDrivers);
+    Dashboard.robotLengthBumpers.set(robotLengthBumpers);
+    Dashboard.robotWidthBumpers.set(robotWidthBumpers);
+
+    // Configure compressor
+    compressor.enableAnalog(100, 120);
+
+    // Configure CommandBased
+    configureDefaultCommands();
+
+    registerNamedCommands();
+
+    configureButtonBindings();
+  }
+
+  // Get sensors to avoid faulty calls to null objects in periodic functions
   @Override
   public void robotInit() {
-    // Instantiate our RobotContainer. This will perform all our button bindings, and put our
-    // autonomous chooser on the dashboard.
-    m_robotContainer = new RobotContainer();
+    getSensors();
   }
 
   /**
-   * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics
-   * that you want ran during disabled, autonomous, teleoperated and test.
-   *
-   * <p>This runs after the mode specific periodic functions, but before LiveWindow and
-   * SmartDashboard integrated updating.
+   * This is called on every loop cycle
    */
   @Override
   public void robotPeriodic() {
-    // Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
-    // commands, running already-scheduled commands, removing finished or interrupted commands,
-    // and running subsystem periodic() methods.  This must be called from the robot's periodic
-    // block in order for anything in the Command-based framework to work.
+    // Start by updating all sensor values
+    getSensors();
+
     CommandScheduler.getInstance().run();
+
+    boolean[] confirmedStates = new boolean[5];
+    confirmedStates[masterState.ordinal()] = true;
+    Dashboard.confirmedMasterStates.set(confirmedStates);
+    Dashboard.isAutonomous.set(isAutonomous());
+    double selectedDriver = Dashboard.selectedDriver.get();
+    if (selectedDriver != selectedDriver0) {
+      selectedDriver0 = selectedDriver;
+      Dashboard.currentDriverProfileSetpoints
+          .set(SwerveUtils.readDriverProfiles(legalDrivers[(int) Dashboard.selectedDriver.get()]).toDoubleArray());
+    }
+    if (Dashboard.applyProfileSetpoints.get()) {
+      double[] setpoints = Dashboard.newDriverProfileSetpoints.get();
+      SwerveUtils.updateDriverProfile(setpoints);
+      Dashboard.currentDriverProfileSetpoints.set(setpoints);
+    }
+
+    updateLoopTime();
+    Dashboard.loopTime.set(loopTime_ms);
   }
 
-  /** This function is called once each time the robot enters Disabled mode. */
+  /**
+   * This is called every loop cycle while the robot is disabled
+   */
   @Override
-  public void disabledInit() {}
+  public void disabledPeriodic() {
+    updateOutputs();
+  }
 
-  @Override
-  public void disabledPeriodic() {}
-
-  /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+    autonomousCommand = new PathPlannerAuto("Example Auto");
 
+    if (autonomousCommand != null) {
+      autonomousCommand.schedule();
+    }
+  }
+
+  /**
+   * This is called every loop cycle while the robot is enabled in autonomous mode
+   */
+  @Override
+  public void autonomousPeriodic() {
+    updateOutputs();
+  }
+
+  /**
+   * This is called every loop cycle while the robot is enabled in TeleOp mode
+   */
+  @Override
+  public void teleopPeriodic() {
+
+    drivetrain.driveTeleop(driverController, false, loopTime_ms);
+
+    // Check for state updates based on manip inputs
+    updateMasterState();
+
+    // Adjust LED color settings based on mode using driver controller
+    led.updateLED(driverController, false);
+
+    // Update outputs for everything
+    // This includes all motors, pistons, and other things
+    updateOutputs();
+  }
+
+  /**
+   * 
+   */
+  private void getSensors() {
+    drivetrain.updateSensors(driverController);
+    Dashboard.pressureTransducer.set(compressor.getPressure());
+  }
+
+  /**
+   * 
+   */
+  private void updateOutputs() {
+    drivetrain.updateOutputs(isAutonomous(), driverController);
+    led.updateOutputs();
+  }
+
+  /**
+   * 
+   */
+  public void updateMasterState() {
     /*
-     * String autoSelected = SmartDashboard.getString("Auto Selector",
-     * "Default"); switch(autoSelected) { case "My Auto": autonomousCommand
-     * = new MyAutoCommand(); break; case "Default Auto": default:
-     * autonomousCommand = new ExampleCommand(); break; }
+     * Change master states to match these manip inputs:
+     * Left Bumper: STOW
+     * Right Bumper: AMP
+     * Right Trigger: SHOOTING
+     * Left Trigger & Start Button: CLIMBING
      */
-
-    // schedule the autonomous command (example)
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.schedule();
+    if (manipController.getLeftBumper()) {
+      masterState = MasterStates.STOWED;
     }
   }
 
-  /** This function is called periodically during autonomous. */
-  @Override
-  public void autonomousPeriodic() {}
-
-  @Override
-  public void teleopInit() {
-    // This makes sure that the autonomous stops running when
-    // teleop starts running. If you want the autonomous to
-    // continue until interrupted by another command, remove
-    // this line or comment it out.
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.cancel();
-    }
+  public static void updateLoopTime() {
+    loopTime_ms = System.currentTimeMillis() - loopTime0;
+    loopTime0 = System.currentTimeMillis();
   }
 
-  /** This function is called periodically during operator control. */
-  @Override
-  public void teleopPeriodic() {}
-
-  @Override
-  public void testInit() {
-    // Cancels all running commands at the start of test mode.
-    CommandScheduler.getInstance().cancelAll();
+  private void configureDefaultCommands() {
+    drivetrain.setDefaultCommand(
+        DrivetrainCommands.drive(
+            drivetrain,
+            driverController,
+            isAutonomous(),
+            loopTime_ms));
   }
 
-  /** This function is called periodically during test mode. */
-  @Override
-  public void testPeriodic() {}
+  /**
+   * Use this method to register named commands for path planner.
+   */
+  private void registerNamedCommands() {
+
+  }
+
+  /**
+   * Use this method to define your button -> command mappings. Buttons can be
+   * created by passing XBoxController into a new JoystickButton
+   */
+  private void configureButtonBindings() {
+
+  }
 }

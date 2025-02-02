@@ -7,13 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "first_path"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "HelloWorld"
+            "pathName": "Example Path"
           }
         }
       ]
