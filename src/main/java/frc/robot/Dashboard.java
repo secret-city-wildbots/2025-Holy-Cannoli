@@ -1,6 +1,7 @@
 package frc.robot;
 
 import edu.wpi.first.networktables.BooleanArrayPublisher;
+import edu.wpi.first.networktables.BooleanArraySubscriber;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.BooleanSubscriber;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
@@ -24,6 +25,7 @@ public class Dashboard {
     public static DoubleArrayPublisher swerve1Details;
     public static DoubleArrayPublisher swerve2Details;
     public static DoubleArrayPublisher swerve3Details;
+    public static BooleanArraySubscriber swerveDisables;
     public static DoubleArrayPublisher currentDriverProfileSetpoints;
     public static StringArrayPublisher legalDrivers;
     
@@ -75,6 +77,7 @@ public class Dashboard {
         swerve1Details = table.getDoubleArrayTopic("Swerve_1_Details").publish();
         swerve2Details = table.getDoubleArrayTopic("Swerve_2_Details").publish();
         swerve3Details = table.getDoubleArrayTopic("Swerve_3_Details").publish();
+        swerveDisables = table.getBooleanArrayTopic("Swerve_Disables").subscribe();
         currentDriverProfileSetpoints = table.getDoubleArrayTopic("Current_Driver_Profile_Setpoints").publish();
         newDriverProfileSetpoints = table.getDoubleArrayTopic("New_Driver_Profile_Setpoints")
                 .subscribe(new double[] { 0.08, 1.8, 1, 0.15, 2.5, 1 });

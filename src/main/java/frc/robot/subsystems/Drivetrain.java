@@ -104,10 +104,10 @@ public class Drivetrain extends SubsystemBase {
     odometry.update(
         getIMURotation(),
         new SwerveModulePosition[] {
-            module0.getPosition(),
-            module1.getPosition(),
-            module2.getPosition(),
-            module3.getPosition()
+            (!Dashboard.swerveDisables.get()[0]) ? module0.getPosition():new SwerveModulePosition(0,new Rotation2d(0)),
+            (!Dashboard.swerveDisables.get()[1]) ? module1.getPosition():new SwerveModulePosition(0,new Rotation2d(0)),
+            (!Dashboard.swerveDisables.get()[2]) ? module2.getPosition():new SwerveModulePosition(0,new Rotation2d(0)),
+            (!Dashboard.swerveDisables.get()[3]) ? module3.getPosition():new SwerveModulePosition(0,new Rotation2d(0))
         });
     return odometry;
   }
@@ -171,23 +171,39 @@ public class Drivetrain extends SubsystemBase {
     }
 
     // Defining all modules
-    module0 = new SwerveModule(driveHighGearRatio, driveLowGearRatio, azimuthGearRatio, 0, driveConfigs[0],
+    if (!Dashboard.swerveDisables.get()[0]) {
+      module0 = new SwerveModule(driveHighGearRatio, driveLowGearRatio, azimuthGearRatio, 0, driveConfigs[0],
         azimuthConfigs[0]);
-    module1 = new SwerveModule(driveHighGearRatio, driveLowGearRatio, azimuthGearRatio, 1, driveConfigs[1],
+    } else {
+      module0 = null;
+    }
+    if (!Dashboard.swerveDisables.get()[1]) {
+      module1 = new SwerveModule(driveHighGearRatio, driveLowGearRatio, azimuthGearRatio, 1, driveConfigs[1],
         azimuthConfigs[1]);
-    module2 = new SwerveModule(driveHighGearRatio, driveLowGearRatio, azimuthGearRatio, 2, driveConfigs[2],
+    } else {
+      module1 = null;
+    }
+    if (!Dashboard.swerveDisables.get()[2]) {
+      module2 = new SwerveModule(driveHighGearRatio, driveLowGearRatio, azimuthGearRatio, 2, driveConfigs[2],
         azimuthConfigs[2]);
-    module3 = new SwerveModule(driveHighGearRatio, driveLowGearRatio, azimuthGearRatio, 3, driveConfigs[3],
+    } else {
+      module2 = null;
+    }
+    if (!Dashboard.swerveDisables.get()[3]) {
+      module3 = new SwerveModule(driveHighGearRatio, driveLowGearRatio, azimuthGearRatio, 3, driveConfigs[3],
         azimuthConfigs[3]);
+    } else {
+      module3 = null;
+    }
 
     // Odometry object for tracking robot position using kinematics
     odometry = new SwerveDriveOdometry(
         kinematics, getIMURotation(),
         new SwerveModulePosition[] {
-            module0.getPosition(),
-            module1.getPosition(),
-            module2.getPosition(),
-            module3.getPosition()
+          (!Dashboard.swerveDisables.get()[0]) ? module0.getPosition():new SwerveModulePosition(0,new Rotation2d(0)),
+          (!Dashboard.swerveDisables.get()[1]) ? module1.getPosition():new SwerveModulePosition(0,new Rotation2d(0)),
+          (!Dashboard.swerveDisables.get()[2]) ? module2.getPosition():new SwerveModulePosition(0,new Rotation2d(0)),
+          (!Dashboard.swerveDisables.get()[3]) ? module3.getPosition():new SwerveModulePosition(0,new Rotation2d(0))
         });
 
     /*

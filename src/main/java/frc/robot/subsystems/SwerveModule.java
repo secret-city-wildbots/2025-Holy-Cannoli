@@ -295,37 +295,39 @@ public class SwerveModule {
         // Wrapping the angle to allow for "continuous input"
         double minDistance = MathUtil.angleModulus(normalAzimuthOutput_rad - azimuthAngle_rad);
         double normalAzimuthOutput_rot = Units.radiansToRotations(azimuthAngle_rad + minDistance) * azimuthRatio;
+        
+        if (!Dashboard.swerveDisables.get()[this.moduleNumber]) { //disable outputs in case of swerve disable
+            if (azimuthSparkActive) {
+                ActuatorInterlocks.TAI_SparkMAX_Position(azimuthSpark, azimuthPidController,
+                        "Azimuth_" + ((Integer) moduleNumber).toString() + "_(p)",
+                        normalAzimuthOutput_rot, 0.0);
+                if (Dashboard.calibrateWheels.get()) {
+                    azimuthEncoder.setPosition(0);
+                }
+            } else {
+                /* PID tuning code START */
+                // double kp = Dashboard.freeTuningkP.get();
+                // double ki = Dashboard.freeTuningkI.get();
+                // double kd = Dashboard.freeTuningkD.get();
+                // if ((kp0 != kp) || (ki0 != ki) || (kd0 != kd)) {
+                // azimuthPIDConfigs.kP = kp;
+                // azimuthPIDConfigs.kI = ki;
+                // azimuthPIDConfigs.kD = kd;
+                // this.azimuthTalon.getConfigurator().apply(azimuthPIDConfigs);
+                // kp0 = kp;
+                // ki0 = ki;
+                // kd0 = kd;
+                // }
+                /* PID tuning code END */
 
-        if (azimuthSparkActive) {
-            ActuatorInterlocks.TAI_SparkMAX_Position(azimuthSpark, azimuthPidController,
-                    "Azimuth_" + ((Integer) moduleNumber).toString() + "_(p)",
-                    normalAzimuthOutput_rot, 0.0);
-            if (Dashboard.calibrateWheels.get()) {
-                azimuthEncoder.setPosition(0);
+                if (Dashboard.calibrateWheels.get()) {
+                    azimuthTalon.setPosition(0.0);
+                }
+
+                ActuatorInterlocks.TAI_TalonFX_Position(azimuthTalon,
+                        "Azimuth_" + ((Integer) moduleNumber).toString() + "_(p)",
+                        normalAzimuthOutput_rot, 0.0);
             }
-        } else {
-            /* PID tuning code START */
-            // double kp = Dashboard.freeTuningkP.get();
-            // double ki = Dashboard.freeTuningkI.get();
-            // double kd = Dashboard.freeTuningkD.get();
-            // if ((kp0 != kp) || (ki0 != ki) || (kd0 != kd)) {
-            // azimuthPIDConfigs.kP = kp;
-            // azimuthPIDConfigs.kI = ki;
-            // azimuthPIDConfigs.kD = kd;
-            // this.azimuthTalon.getConfigurator().apply(azimuthPIDConfigs);
-            // kp0 = kp;
-            // ki0 = ki;
-            // kd0 = kd;
-            // }
-            /* PID tuning code END */
-
-            if (Dashboard.calibrateWheels.get()) {
-                azimuthTalon.setPosition(0.0);
-            }
-
-            ActuatorInterlocks.TAI_TalonFX_Position(azimuthTalon,
-                    "Azimuth_" + ((Integer) moduleNumber).toString() + "_(p)",
-                    normalAzimuthOutput_rot, 0.0);
         }
 
         // Decide whether to put azimuth in coast mode
