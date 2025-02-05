@@ -35,6 +35,7 @@ import frc.robot.Utility.ClassHelpers.Latch;
 import frc.robot.Utility.ClassHelpers.StickyButton;
 import frc.robot.Utility.ClassHelpers.Timer;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.LinearVelocity;
 
 public class Drivetrain extends SubsystemBase {
   // Constants
@@ -200,10 +201,10 @@ public class Drivetrain extends SubsystemBase {
     odometry = new SwerveDriveOdometry(
         kinematics, getIMURotation(),
         new SwerveModulePosition[] {
-          (!Dashboard.swerveDisables.get()[0]) ? module0.getPosition():new SwerveModulePosition(0,new Rotation2d(0)),
-          (!Dashboard.swerveDisables.get()[1]) ? module1.getPosition():new SwerveModulePosition(0,new Rotation2d(0)),
-          (!Dashboard.swerveDisables.get()[2]) ? module2.getPosition():new SwerveModulePosition(0,new Rotation2d(0)),
-          (!Dashboard.swerveDisables.get()[3]) ? module3.getPosition():new SwerveModulePosition(0,new Rotation2d(0))
+          (!Dashboard.swerveDisables.get()[0]) ? module0.getPosition():new SwerveModulePosition(),
+          (!Dashboard.swerveDisables.get()[1]) ? module1.getPosition():new SwerveModulePosition(),
+          (!Dashboard.swerveDisables.get()[2]) ? module2.getPosition():new SwerveModulePosition(),
+          (!Dashboard.swerveDisables.get()[3]) ? module3.getPosition():new SwerveModulePosition()
         });
 
     /*
@@ -268,10 +269,10 @@ public class Drivetrain extends SubsystemBase {
   // Logs information to SmartDashboard
   public void updateSensors(XboxController driverController) {
     moduleStates = new SwerveModuleState[] {
-        module0.updateSensors(),
-        module1.updateSensors(),
-        module2.updateSensors(),
-        module3.updateSensors()
+      (!Dashboard.swerveDisables.get()[0]) ? module0.updateSensors():new SwerveModuleState(),
+      (!Dashboard.swerveDisables.get()[1]) ? module1.updateSensors():new SwerveModuleState(),
+      (!Dashboard.swerveDisables.get()[2]) ? module2.updateSensors():new SwerveModuleState(),
+      (!Dashboard.swerveDisables.get()[3]) ? module3.updateSensors():new SwerveModuleState()
     };
 
     ChassisSpeeds currentSpeeds = kinematics.toChassisSpeeds(moduleStates);
@@ -291,10 +292,10 @@ public class Drivetrain extends SubsystemBase {
     odometry.update(
         getIMURotation(),
         new SwerveModulePosition[] {
-            module0.getPosition(),
-            module1.getPosition(),
-            module2.getPosition(),
-            module3.getPosition()
+          (!Dashboard.swerveDisables.get()[0]) ? module0.getPosition():new SwerveModulePosition(),
+          (!Dashboard.swerveDisables.get()[1]) ? module1.getPosition():new SwerveModulePosition(),
+          (!Dashboard.swerveDisables.get()[2]) ? module2.getPosition():new SwerveModulePosition(),
+          (!Dashboard.swerveDisables.get()[3]) ? module3.getPosition():new SwerveModulePosition(),
         });
 
     LimelightHelpers.SetRobotOrientation("", getIMURotation().getDegrees(), 0, 0, 0, 0, 0);
@@ -303,10 +304,10 @@ public class Drivetrain extends SubsystemBase {
       odometry.resetPosition(
           getIMURotation(),
           new SwerveModulePosition[] {
-              module0.getPosition(),
-              module1.getPosition(),
-              module2.getPosition(),
-              module3.getPosition()
+            (!Dashboard.swerveDisables.get()[0]) ? module0.getPosition():new SwerveModulePosition(),
+            (!Dashboard.swerveDisables.get()[1]) ? module1.getPosition():new SwerveModulePosition(),
+            (!Dashboard.swerveDisables.get()[2]) ? module2.getPosition():new SwerveModulePosition(),
+            (!Dashboard.swerveDisables.get()[3]) ? module3.getPosition():new SwerveModulePosition(),
           },
           (DriverStation.getAlliance().get().equals(DriverStation.Alliance.Red))
               ? LimelightHelpers.getBotPoseEstimate_wpiRed_MegaTag2("").pose
@@ -348,10 +349,10 @@ public class Drivetrain extends SubsystemBase {
     odometry.resetPosition(
         getIMURotation(),
         new SwerveModulePosition[] {
-            module0.getPosition(),
-            module1.getPosition(),
-            module2.getPosition(),
-            module3.getPosition()
+          (!Dashboard.swerveDisables.get()[0]) ? module0.getPosition():new SwerveModulePosition(),
+          (!Dashboard.swerveDisables.get()[1]) ? module1.getPosition():new SwerveModulePosition(),
+          (!Dashboard.swerveDisables.get()[2]) ? module2.getPosition():new SwerveModulePosition(),
+          (!Dashboard.swerveDisables.get()[3]) ? module3.getPosition():new SwerveModulePosition(),
         },
         pose);
   }
@@ -517,10 +518,10 @@ public class Drivetrain extends SubsystemBase {
    *         <li>azimuth faults
    */
   public boolean[] getFaults() {
-    boolean[] faults0 = module0.getSwerveFaults();
-    boolean[] faults1 = module1.getSwerveFaults();
-    boolean[] faults2 = module2.getSwerveFaults();
-    boolean[] faults3 = module3.getSwerveFaults();
+    boolean[] faults0 = (!Dashboard.swerveDisables.get()[0]) ? module0.getSwerveFaults():new boolean[]{false, false};
+    boolean[] faults1 = (!Dashboard.swerveDisables.get()[1]) ? module1.getSwerveFaults():new boolean[]{false, false};
+    boolean[] faults2 = (!Dashboard.swerveDisables.get()[2]) ? module2.getSwerveFaults():new boolean[]{false, false};
+    boolean[] faults3 = (!Dashboard.swerveDisables.get()[3]) ? module3.getSwerveFaults():new boolean[]{false, false};
     driveFaults = new boolean[] { faults0[0], faults1[0], faults2[0], faults3[0] };
     azimuthFaults = new boolean[] { faults0[1], faults1[1], faults2[1], faults3[1] };
     boolean driveFault = faults0[0] || faults1[0] || faults2[0] || faults3[0];
@@ -551,24 +552,32 @@ public class Drivetrain extends SubsystemBase {
         driveManualAdjustments[3] * moduleStateOutputs[3].speedMetersPerSecond,
         moduleStateOutputs[3].angle);
 
-    module0.updateOutputs(moduleStateOutputs[0], isAutonomous, fLow, driveFaults[0] || azimuthFaults[0], homeWheels);
-    module1.updateOutputs(moduleStateOutputs[1], isAutonomous, fLow, driveFaults[1] || azimuthFaults[1], homeWheels);
-    module2.updateOutputs(moduleStateOutputs[2], isAutonomous, fLow, driveFaults[2] || azimuthFaults[2], homeWheels);
-    module3.updateOutputs(moduleStateOutputs[3], isAutonomous, fLow, driveFaults[3] || azimuthFaults[3], homeWheels);
+    if (!Dashboard.swerveDisables.get()[0]) {
+      module0.updateOutputs(moduleStateOutputs[0], isAutonomous, fLow, driveFaults[0] || azimuthFaults[0], homeWheels);
+    }
+    if (!Dashboard.swerveDisables.get()[1]) {
+      module1.updateOutputs(moduleStateOutputs[1], isAutonomous, fLow, driveFaults[1] || azimuthFaults[1], homeWheels);
+    }
+    if (!Dashboard.swerveDisables.get()[2]) {
+      module2.updateOutputs(moduleStateOutputs[2], isAutonomous, fLow, driveFaults[2] || azimuthFaults[2], homeWheels);
+    }
+    if (!Dashboard.swerveDisables.get()[3]) {
+      module3.updateOutputs(moduleStateOutputs[3], isAutonomous, fLow, driveFaults[3] || azimuthFaults[3], homeWheels);
+    }
 
     double[] loggingState = new double[] {
         moduleStateOutputs[1].angle.getRadians(),
         moduleStateOutputs[1].speedMetersPerSecond / maxGroundSpeed_mPs
-            * ((module1.shiftedState.equals(ShiftedStates.HIGH)) ? maxGroundSpeed_mPs : maxLowGearSpeed_mPs),
+            * (((!Dashboard.swerveDisables.get()[1]) ? module1.shiftedState.equals(ShiftedStates.HIGH):true) ? maxGroundSpeed_mPs : maxLowGearSpeed_mPs),
         moduleStateOutputs[0].angle.getRadians(),
         moduleStateOutputs[0].speedMetersPerSecond / maxGroundSpeed_mPs
-            * ((module0.shiftedState.equals(ShiftedStates.HIGH)) ? maxGroundSpeed_mPs : maxLowGearSpeed_mPs),
+            * (((!Dashboard.swerveDisables.get()[0]) ? module0.shiftedState.equals(ShiftedStates.HIGH):true) ? maxGroundSpeed_mPs : maxLowGearSpeed_mPs),
         moduleStateOutputs[2].angle.getRadians(),
         moduleStateOutputs[2].speedMetersPerSecond / maxGroundSpeed_mPs
-            * ((module2.shiftedState.equals(ShiftedStates.HIGH)) ? maxGroundSpeed_mPs : maxLowGearSpeed_mPs),
+            * (((!Dashboard.swerveDisables.get()[2]) ? module2.shiftedState.equals(ShiftedStates.HIGH):true) ? maxGroundSpeed_mPs : maxLowGearSpeed_mPs),
         moduleStateOutputs[3].angle.getRadians(),
         moduleStateOutputs[3].speedMetersPerSecond / maxGroundSpeed_mPs
-            * ((module3.shiftedState.equals(ShiftedStates.HIGH)) ? maxGroundSpeed_mPs : maxLowGearSpeed_mPs)
+            * (((!Dashboard.swerveDisables.get()[3]) ? module3.shiftedState.equals(ShiftedStates.HIGH):true) ? maxGroundSpeed_mPs : maxLowGearSpeed_mPs)
     };
 
     SmartDashboard.putNumberArray("modulestates", loggingState);
@@ -576,27 +585,27 @@ public class Drivetrain extends SubsystemBase {
     // Report to the dashboard
     Dashboard.swerve0Details.set(new double[] {
         moduleStates[0].angle.getDegrees() % 360,
-        module0.getTemp(),
+        (!Dashboard.swerveDisables.get()[0]) ? module0.getTemp():69.0,
         moduleStates[0].speedMetersPerSecond,
-        (module0.shiftedState.equals(ShiftedStates.HIGH)) ? 1 : 0
+        ((!Dashboard.swerveDisables.get()[0]) ? module0.shiftedState.equals(ShiftedStates.HIGH):true) ? 1 : 0
     });
     Dashboard.swerve1Details.set(new double[] {
         moduleStates[1].angle.getDegrees() % 360,
-        module1.getTemp(),
+        (!Dashboard.swerveDisables.get()[1]) ? module1.getTemp():69.0,
         moduleStates[1].speedMetersPerSecond,
-        (module1.shiftedState.equals(ShiftedStates.HIGH)) ? 1 : 0
+        ((!Dashboard.swerveDisables.get()[1]) ? module1.shiftedState.equals(ShiftedStates.HIGH):true) ? 1 : 0
     });
     Dashboard.swerve2Details.set(new double[] {
         moduleStates[2].angle.getDegrees() % 360,
-        module2.getTemp(),
+        (!Dashboard.swerveDisables.get()[2]) ? module2.getTemp():69.0,
         moduleStates[2].speedMetersPerSecond,
-        (module2.shiftedState.equals(ShiftedStates.HIGH)) ? 1 : 0
+        ((!Dashboard.swerveDisables.get()[2]) ? module2.shiftedState.equals(ShiftedStates.HIGH):true) ? 1 : 0
     });
     Dashboard.swerve3Details.set(new double[] {
         moduleStates[3].angle.getDegrees() % 360,
-        module3.getTemp(),
+        (!Dashboard.swerveDisables.get()[3]) ? module3.getTemp():69.0,
         moduleStates[3].speedMetersPerSecond,
-        (module3.shiftedState.equals(ShiftedStates.HIGH)) ? 1 : 0
+        ((!Dashboard.swerveDisables.get()[3]) ? module3.shiftedState.equals(ShiftedStates.HIGH):true) ? 1 : 0
     });
   }
 

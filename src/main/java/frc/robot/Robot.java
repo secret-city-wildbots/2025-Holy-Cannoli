@@ -36,7 +36,7 @@ public class Robot extends TimedRobot {
   public static MasterStates masterState = MasterStates.STOWED;
 
   // Major constants
-  private final String codeVersion = "2025-Robot v1.1_dev";
+  private final String codeVersion = "2025-Holy-Cannoli v1.1_dev";
   public static double robotLength_m;
   public static double robotWidth_m;
   public static double robotLengthBumpers;
