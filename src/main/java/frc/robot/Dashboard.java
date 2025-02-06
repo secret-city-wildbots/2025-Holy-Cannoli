@@ -8,6 +8,7 @@ import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.IntegerArraySubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringArrayPublisher;
@@ -65,6 +66,10 @@ public class Dashboard {
     public static DoubleSubscriber freeTuningkD;
     public static StringSubscriber testActuatorName;
 
+    // Button binding testing
+    public static DoubleArraySubscriber motorAmplitudes;
+    public static IntegerArraySubscriber motorSelectorStates;
+
     /**
      * Creates an object for storing dashboard publishers and subscribers
      */
@@ -83,6 +88,9 @@ public class Dashboard {
                 .subscribe(new double[] { 0.08, 1.8, 1, 0.15, 2.5, 1 });
         legalDrivers = table.getStringArrayTopic("Legal_Drivers").publish();
 
+        motorAmplitudes = table.getDoubleArrayTopic("Motor_Amplitudes").subscribe(new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 });
+        motorSelectorStates = table.getIntegerArrayTopic("Motor_Selector_States").subscribe(new long[] { 0, 0, 0, 0, 0, 0, 0, 0 });
+        
         robotX = table.getDoubleTopic("Robot_X").publish();
         robotY = table.getDoubleTopic("Robot_Y").publish();
         robotHeading = table.getDoubleTopic("Robot_H").publish();

@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Commands.DrivetrainCommands;
 import frc.robot.Subsystems.Drivetrain;
+import frc.robot.Subsystems.MotorTestButtons;
 import frc.robot.Utility.FileHelpers;
 import frc.robot.Utility.SwerveUtils;
 import edu.wpi.first.math.util.Units;
@@ -28,6 +29,7 @@ public class Robot extends TimedRobot {
 
   @SuppressWarnings("unused")
   private final Dashboard dashboard = new Dashboard();
+  private MotorTestButtons motorTestButtons = new MotorTestButtons();
 
   public static enum MasterStates {
     STOWED
@@ -116,6 +118,8 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
+    System.out.println("hello world");
+    System.out.println((int)Dashboard.motorSelectorStates.get()[0]);
     // Start by updating all sensor values
     getSensors();
 
@@ -197,6 +201,7 @@ public class Robot extends TimedRobot {
    * 
    */
   private void updateOutputs() {
+    motorTestButtons.updateOutputs();
     drivetrain.updateOutputs(isAutonomous(), driverController);
     led.updateOutputs();
   }
