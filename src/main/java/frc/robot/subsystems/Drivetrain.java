@@ -68,7 +68,8 @@ public class Drivetrain extends SubsystemBase {
   // Major objects
   private final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(module0Location_m, module1Location_m,
       module2Location_m, module3Location_m);
-  private static final Pigeon2 pigeon = new Pigeon2(6);
+  public static Boolean pigeonExists = true;
+  private static Pigeon2 pigeon;
   public final SwerveDriveOdometry odometry;
   SlewRateLimiter xAccelerationLimiter = new SlewRateLimiter(4.4, -1000, 0.0);
   SlewRateLimiter yAccelerationLimiter = new SlewRateLimiter(4.4, -1000, 0.0);
@@ -152,6 +153,8 @@ public class Drivetrain extends SubsystemBase {
         azimuthConfigs = SwerveUtils.swerveModuleAzimuthConfigs();
         driveManualAdjustments = new double[] { 1, 1, 1, 1 };
         break;
+      case "Linguini":
+        pigeonExists = false;
       default:
         nominalWheelDiameter_m = Units.inchesToMeters(5);
         actualWheelDiameter_m = Units.inchesToMeters(4.78);
@@ -169,6 +172,10 @@ public class Drivetrain extends SubsystemBase {
         driveConfigs = SwerveUtils.swerveModuleDriveConfigs();
         azimuthConfigs = SwerveUtils.swerveModuleAzimuthConfigs();
         driveManualAdjustments = new double[] { 1, 1, 1, 1 };
+    }
+
+    if (pigeonExists) {
+      pigeon = new Pigeon2(6);
     }
 
     // Defining all modules
@@ -260,7 +267,7 @@ public class Drivetrain extends SubsystemBase {
   private static Rotation2d imuOffset = new Rotation2d();
 
   public static Rotation2d getIMURotation() {
-    Rotation2d imuRelativeRotation = pigeon.getRotation2d();
+    Rotation2d imuRelativeRotation = (pigeonExists) ? pigeon.getRotation2d():new Rotation2d();
     return imuRelativeRotation.minus(imuOffset);
   }
 
@@ -284,7 +291,7 @@ public class Drivetrain extends SubsystemBase {
       resetIMU0 = false;
     } else if (resetIMUTimer.getTimeMillis() > 3000) {
       if (!resetIMU0) {
-        imuOffset = pigeon.getRotation2d();
+        imuOffset = (pigeonExists) ? pigeon.getRotation2d():new Rotation2d();
       }
       resetIMU0 = true;
     }

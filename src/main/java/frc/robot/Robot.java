@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Commands.DrivetrainCommands;
 import frc.robot.Subsystems.Drivetrain;
-import frc.robot.Subsystems.MotorTestButtons;
+import frc.robot.Subsystems.ExtraMotors;
 import frc.robot.Utility.FileHelpers;
 import frc.robot.Utility.SwerveUtils;
 import edu.wpi.first.math.util.Units;
@@ -23,13 +23,13 @@ public class Robot extends TimedRobot {
   private final Drivetrain drivetrain;
   private final XboxController driverController;
   private final XboxController manipController;
-  private final Compressor compressor;
+  private Compressor compressor;
   private final LED led;
   private Command autonomousCommand;
 
   @SuppressWarnings("unused")
   private final Dashboard dashboard = new Dashboard();
-  private MotorTestButtons motorTestButtons = new MotorTestButtons();
+  private ExtraMotors motorTestButtons = new ExtraMotors();
 
   public static enum MasterStates {
     STOWED
@@ -43,11 +43,12 @@ public class Robot extends TimedRobot {
   public static double robotWidth_m;
   public static double robotLengthBumpers;
   public static double robotWidthBumpers;
+  public static Boolean compressorExists;
   public static final String robotProfile = FileHelpers.readFile("/home/lvuser/calibrations/RobotProfile.txt");
   private final String[] actuatorNames = { "No_Test", "Compressor_(p)", "Drive_0_(p)", "Drive_1_(p)", "Drive_2_(p)",
       "Drive_3_(p)",
       "Azimuth_0_(p)", "Azimuth_1_(p)", "Azimuth_2_(p)", "Azimuth_3_(p)", "Swerve_0_Shifter_(b)",
-      "Swerve_1_Shifter_(b)", "Swerve_2_Shifter_(b)", "Swerve_3_Shifter_(b)", "Drivetrain_(p)" };
+      "Swerve_1_Shifter_(b)", "Swerve_2_Shifter_(b)", "Swerve_3_Shifter_(b)", "Drivetrain_(p)", "Motor_1_(p)", "Motor_2_(p)", "Motor_3_(p)", "Motor_4_(p)", "Motor_5_(p)", "Motor_6_(p)", "Motor_7_(p)", "Motor_8_(p)" };
   public static final String[] legalDrivers = { "Devin", "Reed", "Driver 3", "Driver 4", "Driver 5", "Programmers",
       "Kidz" };
 
@@ -69,14 +70,17 @@ public class Robot extends TimedRobot {
         robotWidth_m = Units.inchesToMeters(23);
         robotLengthBumpers = Units.inchesToMeters(35);
         robotWidthBumpers = Units.inchesToMeters(35);
+        compressorExists = true;
         break;
       case "COTS_Testbed":
         robotLength_m = Units.inchesToMeters(23);
         robotWidth_m = Units.inchesToMeters(23);
+        compressorExists = true;
         break;
       default:
         robotLength_m = Units.inchesToMeters(23);
         robotWidth_m = Units.inchesToMeters(23);
+        compressorExists = false;
     }
     
      // Set up subsystems and major objects
@@ -84,7 +88,10 @@ public class Robot extends TimedRobot {
      led = new LED();
      driverController = new XboxController(0);
      manipController = new XboxController(1);
-     compressor = new Compressor(2, PneumaticsModuleType.REVPH);
+     if (compressorExists) {
+      compressor = new Compressor(2, PneumaticsModuleType.REVPH);
+      compressor.enableAnalog(100, 120);
+     }
 
     // Send major constants to the Dashboard
     Dashboard.robotProfile.set(robotProfile);
@@ -96,8 +103,6 @@ public class Robot extends TimedRobot {
     Dashboard.robotLengthBumpers.set(robotLengthBumpers);
     Dashboard.robotWidthBumpers.set(robotWidthBumpers);
 
-    // Configure compressor
-    compressor.enableAnalog(100, 120);
 
     // Configure CommandBased
     configureDefaultCommands();
@@ -118,8 +123,6 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
-    System.out.println("hello world");
-    System.out.println((int)Dashboard.motorSelectorStates.get()[0]);
     // Start by updating all sensor values
     getSensors();
 
@@ -194,14 +197,18 @@ public class Robot extends TimedRobot {
    */
   private void getSensors() {
     drivetrain.updateSensors(driverController);
-    Dashboard.pressureTransducer.set(compressor.getPressure());
+    if (compressorExists) {
+      Dashboard.pressureTransducer.set(compressor.getPressure());
+    } else {
+      Dashboard.pressureTransducer.set(69);
+    }
   }
 
   /**
    * 
    */
   private void updateOutputs() {
-    motorTestButtons.updateOutputs();
+    motorTestButtons.updateOutputs(driverController);
     drivetrain.updateOutputs(isAutonomous(), driverController);
     led.updateOutputs();
   }
