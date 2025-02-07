@@ -77,6 +77,10 @@ public class Robot extends TimedRobot {
         robotWidth_m = Units.inchesToMeters(23);
         compressorExists = true;
         break;
+      case "Linguini":
+        robotLength_m = Units.inchesToMeters(69);
+        robotWidth_m = Units.inchesToMeters(69);
+        compressorExists = false;
       default:
         robotLength_m = Units.inchesToMeters(23);
         robotWidth_m = Units.inchesToMeters(23);

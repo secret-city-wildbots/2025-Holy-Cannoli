@@ -11,6 +11,7 @@ public class ExtraMotor {
     public TalonFX motorTFX;
     public SparkMax motorSPM;
     public double dc = 0;
+    public Boolean toggled = false;
     public static enum MotorBrand {
         SPM,
         TFX

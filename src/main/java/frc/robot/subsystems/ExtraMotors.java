@@ -7,13 +7,17 @@ import frc.robot.Utility.ExtraMotor.MotorBrand;
 
 public class ExtraMotors {
     public static String[] buttonNames = {"Off", "Slider", "D_LT", "D_RT", "D_LB", "D_RB", "D_Y", "D_X", "D_A", "D_B", "MLJoystick_X", "MLJoystick_Y", "M_RJoystick_X", "M_RJoystick_Y", "M_LT", "M_RT", "M_LB", "M_RB", "M_Y", "M_X", "M_A", "M_B"};
-    public ExtraMotor[] motors = {new ExtraMotor(1, MotorBrand.TFX),new ExtraMotor(2, MotorBrand.TFX)};
+    public ExtraMotor[] motors = {new ExtraMotor(1, MotorBrand.TFX)};
     
     public ExtraMotors() {
     }   
 
     public void updateOutputs(XboxController driverController) {
         for (int motor = 0; motor < motors.length; motor++){
+            motors[motor].dc = 0;
+            if (motors[motor].toggled) {
+                motors[motor].dc = motors[motor].dc = Dashboard.motorAmplitudes.get()[motor];
+            }
             switch (buttonNames[(int)Dashboard.motorSelectorStates.get()[motor]]) {
                 case "Off":
                     motors[motor].dc = 0;
@@ -32,13 +36,13 @@ public class ExtraMotors {
                     }
                     break;
                 case "D_LB":
-                    if (driverController.getLeftBumperButton()) {
-                        motors[motor].dc = Dashboard.motorAmplitudes.get()[motor];
+                    if (driverController.getLeftBumperButtonPressed()) {
+                        motors[motor].toggled = !motors[motor].toggled;
                     }
                     break;
                 case "D_RB":
-                    if (driverController.getRightBumperButton()) {
-                        motors[motor].dc = Dashboard.motorAmplitudes.get()[motor];
+                    if (driverController.getRightBumperButtonPressed()) {
+                        motors[motor].toggled = !motors[motor].toggled;
                     }
                     break;
                 case "D_Y":
