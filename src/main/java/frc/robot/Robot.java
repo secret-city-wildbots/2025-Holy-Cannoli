@@ -212,7 +212,7 @@ public class Robot extends TimedRobot {
    * 
    */
   private void updateOutputs() {
-    motorTestButtons.updateOutputs(driverController);
+    motorTestButtons.updateOutputs(driverController, manipController);
     drivetrain.updateOutputs(isAutonomous(), driverController);
     led.updateOutputs();
   }
