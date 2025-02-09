@@ -35,9 +35,9 @@ public class ExtraMotor {
      * @param num Motor number (for Actuator Interlocks)
      * @param type can be either SPM or TFX for motor types
      */
-    public ExtraMotor(int num, MotorBrand type) {
+    public ExtraMotor(int id, int num, MotorBrand type) {
         this.type = type;
-        this.id = 40 + num;
+        this.id = id;
         this.num = num;
         if (type == MotorBrand.SPM) {
             this.motorSPM = new SparkMax(id, MotorType.kBrushless);

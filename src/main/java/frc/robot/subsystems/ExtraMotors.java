@@ -1,18 +1,29 @@
 package frc.robot.Subsystems;
 
+import java.util.ArrayList;
+
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.XboxController;
 import frc.robot.Dashboard;
 import frc.robot.Utility.ExtraMotor;
+import frc.robot.Utility.FollowerMotors;
 import frc.robot.Utility.ExtraMotor.MotorBrand;
 
 public class ExtraMotors {
     public static String[] buttonNames = {"Off", "Slider", "D_LT", "D_RT", "D_LB", "D_RB", "D_Y", "D_X", "D_A", "D_B", "MLJoystick_X", 
     "MLJoystick_Y", "M_RJoystick_X", "M_RJoystick_Y", "M_LT", "M_RT", "M_LB", "M_RB", "M_Y", "M_X", "M_A", "M_B"};
-    public ExtraMotor[] motors = {new ExtraMotor(1, MotorBrand.TFX),new ExtraMotor(2, MotorBrand.SPM)};
+    private ArrayList<ExtraMotor> motorsList;
+    public ExtraMotor[] motors;
+    public FollowerMotors[] followers = new FollowerMotors(41, new int[] {43}, MotorBrand.TFX); //FUTURE JASPER move this to extra motors and implement like the leader
     public double[] PIDs;
     
     public ExtraMotors() {
+        for (int i = 0; i<Dashboard.motorCANIDs.get().length; i++) {
+            if (Dashboard.motorCANIDs.get()[i] != 0) {
+                motorsList.add(new ExtraMotor((int)Dashboard.motorCANIDs.get()[i], i, MotorBrand.values()[(int)Dashboard.motorTypes.get()[i]]));
+            }
+        }
+        motors = motorsList.toArray(motors);
     }   
 
     public void updateOutputs(XboxController driverController, XboxController manipController) {
@@ -138,7 +149,6 @@ public class ExtraMotors {
             if (Dashboard.motorPIDEnabled.get()[motor]) {
                 motors[motor].spin(motors[motor].dc);
             } else {
-                System.out.println("Pos: "+Units.degreesToRotations(motors[motor].dc*motorMaxPos[motor]+motorMinPos[motor])+" DC: "+motors[motor].dc+" maxPos: "+motorMaxPos[motor]+" amp: "+Dashboard.motorAmplitudes.get()[motor]);
                 motors[motor].goToPos(Units.degreesToRotations(motors[motor].dc*motorMaxPos[motor]+motorMinPos[motor])*Dashboard.motorGearRatios.get()[motor]);
             }
         }

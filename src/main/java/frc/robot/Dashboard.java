@@ -73,6 +73,9 @@ public class Dashboard {
     public static BooleanArraySubscriber motorPIDEnabled;
     public static DoubleArraySubscriber motorGearRatios;
     public static DoubleArraySubscriber motorPIDs;
+    public static DoubleArraySubscriber followerCANIDs;
+    public static DoubleArraySubscriber motorCANIDs;
+    public static IntegerArraySubscriber motorTypes;
     public static IntegerArraySubscriber motorSelectorStates;
 
     /**
@@ -93,13 +96,16 @@ public class Dashboard {
                 .subscribe(new double[] { 0.08, 1.8, 1, 0.15, 2.5, 1 });
         legalDrivers = table.getStringArrayTopic("Legal_Drivers").publish();
 
-        motorAmplitudes = table.getDoubleArrayTopic("Motor_Amplitudes").subscribe(new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 });
-        motorSelectorStates = table.getIntegerArrayTopic("Motor_Selector_States").subscribe(new long[] { 0, 0, 0, 0, 0, 0, 0, 0 });
-        motorMaxPIDAngles = table.getDoubleArrayTopic("Max_Angle_Motor_PID").subscribe(new double[] { 0.0, 0.0, 0.0, 0.0 });
-        motorMinPIDAngles = table.getDoubleArrayTopic("Min_Angle_Motor_PID").subscribe(new double[] { 0.0, 0.0, 0.0, 0.0 });
-        motorPIDEnabled = table.getBooleanArrayTopic("Motor_PID_Enabled").subscribe(new boolean[] { false, false, false, false, false, false, false, false });
-        motorGearRatios = table.getDoubleArrayTopic("Motor_Gear_Ratios").subscribe(new double[] { 0.0, 0.0, 0.0, 0.0 });
-        motorPIDs = table.getDoubleArrayTopic("Motor_PIDs").subscribe(new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 });
+        motorAmplitudes = table.getDoubleArrayTopic("Motor_Amplitudes").subscribe(new double[8]);
+        motorSelectorStates = table.getIntegerArrayTopic("Motor_Selector_States").subscribe(new long[8]);
+        motorMaxPIDAngles = table.getDoubleArrayTopic("Max_Angle_Motor_PID").subscribe(new double[8]);
+        motorMinPIDAngles = table.getDoubleArrayTopic("Min_Angle_Motor_PID").subscribe(new double[8]);
+        motorPIDEnabled = table.getBooleanArrayTopic("Motor_PID_Enabled").subscribe(new boolean[8]);
+        motorGearRatios = table.getDoubleArrayTopic("Motor_Gear_Ratios").subscribe(new double[8]);
+        motorPIDs = table.getDoubleArrayTopic("Motor_PIDs").subscribe(new double[3*8]);
+        followerCANIDs = table.getDoubleArrayTopic("Follower_CAN_IDs").subscribe(new double[4*8]);
+        motorCANIDs = table.getDoubleArrayTopic("Motor_CAN_IDs").subscribe(new double[8]);
+        motorTypes = table.getIntegerArrayTopic("Motor_Types").subscribe(new long[8]);
         
         robotX = table.getDoubleTopic("Robot_X").publish();
         robotY = table.getDoubleTopic("Robot_Y").publish();
