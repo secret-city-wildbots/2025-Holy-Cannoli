@@ -5,6 +5,11 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+
+import edu.wpi.first.math.util.Units;
+import frc.robot.Subsystems.Wrist;
+
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -26,8 +31,8 @@ public class ExtraMotor {
     public Boolean toggled = false;
     public double[] PID = {0,0,0};
     public static enum MotorBrand {
-        SPM,
-        TFX
+        TFX,
+        SPM
     }
     /**
      * 
@@ -52,7 +57,17 @@ public class ExtraMotor {
             ActuatorInterlocks.TAI_TalonFX_Power(motorTFX, "Motor_"+Integer.toString(this.num)+"_(p)", dc);
         }
     }
-    public void setPID(double kP, double kI, double kD) {
+
+    /**
+     * sets the PID
+     * @param kP p
+     * @param kI i 
+     * @param kD d
+     * @param min min degrees of pid mode
+     * @param max max degrees of pid mode
+     * @param speed max speed in degrees per second
+     */
+    public void setPID(double kP, double kI, double kD, double min, double max, double speed) {
         if (!(this.PID[0] == kP && this.PID[1] == kI && this.PID[2] == kD)) {
             if (type == MotorBrand.SPM) {
                 if (pidControllerSPM == null) {
@@ -61,7 +76,9 @@ public class ExtraMotor {
                     pidControllerSPM = motorSPM.getClosedLoopController();
                 }
                 motorConfigSPM.closedLoop.pid(kP, kI, kD);
-                motorSPM.configure(motorConfigSPM, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+                motorConfigSPM.idleMode(IdleMode.kBrake);
+                //motorConfigSPM.closedLoop.maxMotion.maxVelocity(Units.degreesToRotations(speed)*60);
+                motorSPM.configure(motorConfigSPM, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
             } else {
                 if (motorConfigTFX == null) {
                     motorConfigTFX = new TalonFXConfiguration();
@@ -79,8 +96,10 @@ public class ExtraMotor {
             this.PID[2] = kD;
         }
     }
-    public void goToPos(double pos_rot) {
+
+    public void goToPos(double pos_rot, double ratio) {
         if (type == MotorBrand.SPM) {
+            System.out.println(Math.round((relativeEncoderSPM.getPosition()/ratio)*360) + " : " + Math.round((Wrist.encoder.get()/37*12)*360));
             ActuatorInterlocks.TAI_SparkMAX_Position(motorSPM, pidControllerSPM, "Motor_"+Integer.toString(this.num)+"_(p)", pos_rot, 0);
         } else {
             ActuatorInterlocks.TAI_TalonFX_Position(motorTFX, "Motor_"+Integer.toString(this.num)+"_(p)", pos_rot, 0);

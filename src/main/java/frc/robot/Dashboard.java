@@ -72,6 +72,7 @@ public class Dashboard {
     public static DoubleArraySubscriber motorMinPIDAngles;
     public static BooleanArraySubscriber motorPIDEnabled;
     public static DoubleArraySubscriber motorGearRatios;
+    public static DoubleArraySubscriber motorMaxSpeeds;
     public static DoubleArraySubscriber motorPIDs;
     public static DoubleArraySubscriber followerCANIDs;
     public static DoubleArraySubscriber motorCANIDs;
@@ -101,7 +102,8 @@ public class Dashboard {
         motorMaxPIDAngles = table.getDoubleArrayTopic("Max_Angle_Motor_PID").subscribe(new double[8]);
         motorMinPIDAngles = table.getDoubleArrayTopic("Min_Angle_Motor_PID").subscribe(new double[8]);
         motorPIDEnabled = table.getBooleanArrayTopic("Motor_PID_Enabled").subscribe(new boolean[8]);
-        motorGearRatios = table.getDoubleArrayTopic("Motor_Gear_Ratios").subscribe(new double[8]);
+        motorGearRatios = table.getDoubleArrayTopic("Motor_Ratios").subscribe(new double[8]);
+        motorMaxSpeeds = table.getDoubleArrayTopic("Motor_Max_Speeds").subscribe(new double[8]);
         motorPIDs = table.getDoubleArrayTopic("Motor_PIDs").subscribe(new double[3*8]);
         followerCANIDs = table.getDoubleArrayTopic("Follower_CAN_IDs").subscribe(new double[4*8]);
         motorCANIDs = table.getDoubleArrayTopic("Motor_CAN_IDs").subscribe(new double[8]);

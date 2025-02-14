@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Commands.DrivetrainCommands;
 import frc.robot.Subsystems.Drivetrain;
 import frc.robot.Subsystems.ExtraMotors;
+import frc.robot.Subsystems.Wrist;
 import frc.robot.Utility.FileHelpers;
 import frc.robot.Utility.SwerveUtils;
 import edu.wpi.first.math.util.Units;
@@ -29,6 +30,7 @@ public class Robot extends TimedRobot {
 
   @SuppressWarnings("unused")
   private final Dashboard dashboard = new Dashboard();
+  private final Wrist wrist = new Wrist();
   private ExtraMotors motorTestButtons = new ExtraMotors();
 
   public static enum MasterStates {
@@ -212,7 +214,7 @@ public class Robot extends TimedRobot {
    * 
    */
   private void updateOutputs() {
-    motorTestButtons.updateOutputs(driverController, manipController);
+    motorTestButtons.update(driverController, manipController);
     drivetrain.updateOutputs(isAutonomous(), driverController);
     led.updateOutputs();
   }
@@ -228,7 +230,7 @@ public class Robot extends TimedRobot {
      * Right Trigger: SHOOTING
      * Left Trigger & Start Button: CLIMBING
      */
-    if (manipController.getLeftBumper()) {
+    if (manipController.getLeftBumperButton()) {
       masterState = MasterStates.STOWED;
     }
   }

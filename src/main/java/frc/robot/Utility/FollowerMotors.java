@@ -1,5 +1,8 @@
 package frc.robot.Utility;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -12,6 +15,7 @@ public class FollowerMotors {
     public int id;
     public TalonFX leaderTFX;
     public TalonFX[] followerTFX;
+    public ArrayList<TalonFX> followerTFXList = new ArrayList<>(Arrays.asList());
     public SparkMax leaderSPM;
     public SparkMax[] followerSPM;
     public TalonFXConfiguration followerConfigTFX = new TalonFXConfiguration();
@@ -35,10 +39,12 @@ public class FollowerMotors {
             leaderTFX.getTorqueCurrent().setUpdateFrequency(50);
 
             for (int motor = 0; motor < followerIDs.length; motor++) {
-                followerTFX[motor] = new TalonFX(followerIDs[motor]);
-                followerTFX[motor].setControl(new Follower(leaderID, false));
-                followerTFX[motor].getConfigurator().apply(followerConfigTFX);
+                followerTFXList.add(new TalonFX(followerIDs[motor]));
+                followerTFXList.get(motor).setControl(new Follower(leaderID, false));
+                followerTFXList.get(motor).getConfigurator().apply(followerConfigTFX);
             }
+
+            followerTFX = followerTFXList.toArray(new TalonFX[followerTFXList.size()]);
         } else {
             throw new Error("Currently doesn't support SPM bc why would you ever group neos? Just use a kraken");
         }

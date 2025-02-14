@@ -1,6 +1,7 @@
 package frc.robot.Subsystems;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.XboxController;
@@ -12,19 +13,52 @@ import frc.robot.Utility.ExtraMotor.MotorBrand;
 public class ExtraMotors {
     public static String[] buttonNames = {"Off", "Slider", "D_LT", "D_RT", "D_LB", "D_RB", "D_Y", "D_X", "D_A", "D_B", "MLJoystick_X", 
     "MLJoystick_Y", "M_RJoystick_X", "M_RJoystick_Y", "M_LT", "M_RT", "M_LB", "M_RB", "M_Y", "M_X", "M_A", "M_B"};
-    private ArrayList<ExtraMotor> motorsList;
+    private ArrayList<ExtraMotor> motorsList = new ArrayList<>(Arrays.asList());
     public ExtraMotor[] motors;
-    public FollowerMotors[] followers = new FollowerMotors(41, new int[] {43}, MotorBrand.TFX); //FUTURE JASPER move this to extra motors and implement like the leader
+    private ArrayList<FollowerMotors> followerList = new ArrayList<>(Arrays.asList());
+    public FollowerMotors[] followers;
     public double[] PIDs;
+    public Boolean active = false;
     
     public ExtraMotors() {
+        
+    }   
+
+    public void init() {
         for (int i = 0; i<Dashboard.motorCANIDs.get().length; i++) {
             if (Dashboard.motorCANIDs.get()[i] != 0) {
                 motorsList.add(new ExtraMotor((int)Dashboard.motorCANIDs.get()[i], i, MotorBrand.values()[(int)Dashboard.motorTypes.get()[i]]));
             }
         }
-        motors = motorsList.toArray(motors);
-    }   
+        for (int i = 0; i<Dashboard.followerCANIDs.get().length/4; i++) {
+            if (Dashboard.motorCANIDs.get()[i] != 0 && Dashboard.motorTypes.get()[i] == 0) {
+                ArrayList<Integer> validFollowers = new ArrayList<>(Arrays.asList());
+                for (int i2 = 0; i2<4; i2++) {
+                    if ((int)Dashboard.followerCANIDs.get()[(i*4)+i2] != 0) {
+                        validFollowers.add((int)Dashboard.followerCANIDs.get()[(i*4)+i2]);
+                    }
+                }
+                Integer[] validFollowersArray = new Integer[validFollowers.size()];
+                validFollowersArray = validFollowers.toArray(validFollowersArray);
+                int[] validFollowersArrayInt = Arrays.stream(validFollowersArray).mapToInt(Integer::intValue).toArray();
+                followerList.add(new FollowerMotors((int)Dashboard.motorCANIDs.get()[i], validFollowersArrayInt, MotorBrand.values()[(int)Dashboard.motorTypes.get()[i]]));
+            }
+        }
+        if (motorsList == null) {
+            motors = new ExtraMotor[0];
+        } else {
+            motors = motorsList.toArray(new ExtraMotor[motorsList.size()]);
+        }
+    }
+
+    public void update(XboxController driverController, XboxController manipController) {
+        if (Dashboard.testActuatorName.get() != "" && !active) {
+            init();
+            active = true;
+        } else if (active) {
+            updateOutputs(driverController, manipController);
+        }
+    }
 
     public void updateOutputs(XboxController driverController, XboxController manipController) {
         PIDs = Dashboard.motorPIDs.get();
@@ -32,7 +66,7 @@ public class ExtraMotors {
         double[] motorMinPos = Dashboard.motorMinPIDAngles.get();
         for (int motor = 0; motor < motors.length; motor++){
             if (!Dashboard.motorPIDEnabled.get()[motor]) {
-                motors[motor].setPID(PIDs[motor*3],PIDs[motor*3+1],PIDs[motor*3+2]);
+                motors[motor].setPID(PIDs[motor*3],PIDs[motor*3+1],PIDs[motor*3+2],Dashboard.motorMinPIDAngles.get()[motor],Dashboard.motorMaxPIDAngles.get()[motor],Dashboard.motorMaxSpeeds.get()[motor]);
             }
             motors[motor].dc = 0;
             if (motors[motor].toggled) {
@@ -149,7 +183,7 @@ public class ExtraMotors {
             if (Dashboard.motorPIDEnabled.get()[motor]) {
                 motors[motor].spin(motors[motor].dc);
             } else {
-                motors[motor].goToPos(Units.degreesToRotations(motors[motor].dc*motorMaxPos[motor]+motorMinPos[motor])*Dashboard.motorGearRatios.get()[motor]);
+                motors[motor].goToPos(Units.degreesToRotations(motors[motor].dc*motorMaxPos[motor]+motorMinPos[motor])*Dashboard.motorGearRatios.get()[motor],Dashboard.motorGearRatios.get()[motor]);
             }
         }
     }
