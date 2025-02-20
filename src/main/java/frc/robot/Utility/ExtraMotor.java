@@ -7,7 +7,9 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Dashboard;
 import frc.robot.Subsystems.Wrist;
 
 import com.revrobotics.RelativeEncoder;
@@ -22,7 +24,7 @@ public class ExtraMotor {
     public int num;
     public TalonFX motorTFX;
     public SparkMax motorSPM;
-    public SparkClosedLoopController pidControllerSPM;
+    public PIDController pidControllerSPM;
     public SparkMaxConfig motorConfigSPM;
     public TalonFXConfiguration motorConfigTFX;
     public Slot0Configs PIDConfigTFX;
@@ -73,11 +75,10 @@ public class ExtraMotor {
                 if (pidControllerSPM == null) {
                     motorConfigSPM = new SparkMaxConfig();
                     relativeEncoderSPM = motorSPM.getEncoder();
-                    pidControllerSPM = motorSPM.getClosedLoopController();
+                    pidControllerSPM = new PIDController(0.0, 0.0, 0.0);
                 }
-                motorConfigSPM.closedLoop.pid(kP, kI, kD);
+                pidControllerSPM.setPID(kP, kI, kD);
                 motorConfigSPM.idleMode(IdleMode.kBrake);
-                //motorConfigSPM.closedLoop.maxMotion.maxVelocity(Units.degreesToRotations(speed)*60);
                 motorSPM.configure(motorConfigSPM, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
             } else {
                 if (motorConfigTFX == null) {
@@ -97,10 +98,16 @@ public class ExtraMotor {
         }
     }
 
-    public void goToPos(double pos_rot, double ratio) {
+    public void goToPos(double pos_rot, double ratio, double maxSpeed_dps) {
         if (type == MotorBrand.SPM) {
-            System.out.println(Math.round((relativeEncoderSPM.getPosition()/ratio)*360) + " : " + Math.round((Wrist.encoder.get()/37*12)*360));
-            ActuatorInterlocks.TAI_SparkMAX_Position(motorSPM, pidControllerSPM, "Motor_"+Integer.toString(this.num)+"_(p)", pos_rot, 0);
+                        
+            double pidOutput = pidControllerSPM.calculate(Wrist.encoder.get(), pos_rot);
+            
+            pidOutput = Math.signum(pidOutput) * Math.min(Math.abs(pidOutput), maxSpeed_dps);
+
+            System.out.println(Math.round((relativeEncoderSPM.getPosition()/ratio)*360) + " : " + Math.round(Units.rotationsToDegrees(Wrist.encoder.get())) + " : " + Math.round(Units.rotationsToDegrees(pos_rot)) + " : " + pidOutput);
+            
+            ActuatorInterlocks.TAI_SparkMAX_Power(motorSPM, "Motor_"+Integer.toString(this.num)+"_(p)", pidOutput);
         } else {
             ActuatorInterlocks.TAI_TalonFX_Position(motorTFX, "Motor_"+Integer.toString(this.num)+"_(p)", pos_rot, 0);
         }

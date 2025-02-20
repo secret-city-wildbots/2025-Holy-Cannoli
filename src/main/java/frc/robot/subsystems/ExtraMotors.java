@@ -126,7 +126,7 @@ public class ExtraMotors {
                     break;
                 case "MLJoystick_Y":
                     if (Math.abs(manipController.getLeftY()) > 0.05) {
-                        motors[motor].dc = manipController.getLeftY() * Dashboard.motorAmplitudes.get()[motor];
+                        motors[motor].dc = manipController.getLeftY() * Dashboard.motorAmplitudes.get()[motor] * -1;
                     }
                     break;
                 case "MRJoystick_X":
@@ -136,7 +136,7 @@ public class ExtraMotors {
                     break;
                 case "MRJoystick_Y":
                     if (Math.abs(manipController.getRightY()) > 0.05) {
-                        motors[motor].dc = manipController.getRightY() * Dashboard.motorAmplitudes.get()[motor];
+                        motors[motor].dc = manipController.getRightY() * Dashboard.motorAmplitudes.get()[motor] * -1;
                     }
                     break;
                 case "M_LT":
@@ -183,7 +183,7 @@ public class ExtraMotors {
             if (Dashboard.motorPIDEnabled.get()[motor]) {
                 motors[motor].spin(motors[motor].dc);
             } else {
-                motors[motor].goToPos(Units.degreesToRotations(motors[motor].dc*motorMaxPos[motor]+motorMinPos[motor])*Dashboard.motorGearRatios.get()[motor],Dashboard.motorGearRatios.get()[motor]);
+                motors[motor].goToPos(Units.degreesToRotations(motors[motor].dc*motorMaxPos[motor]+motorMinPos[motor]),Dashboard.motorGearRatios.get()[motor],Dashboard.motorMaxSpeeds.get()[motor]);
             }
         }
     }
