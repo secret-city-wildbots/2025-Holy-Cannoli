@@ -8,6 +8,7 @@ import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.IntegerArraySubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringArrayPublisher;
@@ -65,6 +66,19 @@ public class Dashboard {
     public static DoubleSubscriber freeTuningkD;
     public static StringSubscriber testActuatorName;
 
+    // Button binding testing
+    public static DoubleArraySubscriber motorAmplitudes;
+    public static DoubleArraySubscriber motorMaxPIDAngles;
+    public static DoubleArraySubscriber motorMinPIDAngles;
+    public static BooleanArraySubscriber motorPIDEnabled;
+    public static DoubleArraySubscriber motorGearRatios;
+    public static DoubleArraySubscriber motorMaxSpeeds;
+    public static DoubleArraySubscriber motorPIDs;
+    public static DoubleArraySubscriber followerCANIDs;
+    public static DoubleArraySubscriber motorCANIDs;
+    public static IntegerArraySubscriber motorTypes;
+    public static IntegerArraySubscriber motorSelectorStates;
+
     /**
      * Creates an object for storing dashboard publishers and subscribers
      */
@@ -83,6 +97,18 @@ public class Dashboard {
                 .subscribe(new double[] { 0.08, 1.8, 1, 0.15, 2.5, 1 });
         legalDrivers = table.getStringArrayTopic("Legal_Drivers").publish();
 
+        motorAmplitudes = table.getDoubleArrayTopic("Motor_Amplitudes").subscribe(new double[8]);
+        motorSelectorStates = table.getIntegerArrayTopic("Motor_Selector_States").subscribe(new long[8]);
+        motorMaxPIDAngles = table.getDoubleArrayTopic("Max_Angle_Motor_PID").subscribe(new double[8]);
+        motorMinPIDAngles = table.getDoubleArrayTopic("Min_Angle_Motor_PID").subscribe(new double[8]);
+        motorPIDEnabled = table.getBooleanArrayTopic("Motor_PID_Enabled").subscribe(new boolean[8]);
+        motorGearRatios = table.getDoubleArrayTopic("Motor_Ratios").subscribe(new double[8]);
+        motorMaxSpeeds = table.getDoubleArrayTopic("Motor_Max_Speeds").subscribe(new double[8]);
+        motorPIDs = table.getDoubleArrayTopic("Motor_PIDs").subscribe(new double[3*8]);
+        followerCANIDs = table.getDoubleArrayTopic("Follower_CAN_IDs").subscribe(new double[4*8]);
+        motorCANIDs = table.getDoubleArrayTopic("Motor_CAN_IDs").subscribe(new double[8]);
+        motorTypes = table.getIntegerArrayTopic("Motor_Types").subscribe(new long[8]);
+        
         robotX = table.getDoubleTopic("Robot_X").publish();
         robotY = table.getDoubleTopic("Robot_Y").publish();
         robotHeading = table.getDoubleTopic("Robot_H").publish();
